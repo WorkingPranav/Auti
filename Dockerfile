@@ -1,9 +1,11 @@
 FROM python:3.9.1-buster
 
-WORKDIR /usr/src/app
+RUN apt -qq update && apt -qq install -y git ffmpeg
 
-COPY . .
+RUN git clone https://github.com/kagutsuchi57/RenameBot /app
+
+WORKDIR /app
 
 RUN pip install -U -r requirements.txt
 
-CMD [ "python", "-m", "MeshRenameBot" ]
+CMD [ "python", "start.sh" ]
