@@ -1,6 +1,6 @@
 from typing import Union
 from pyrogram.types.user_and_chats import user
-
+from pyrogram import Client, filters
 from pyrogram.types.user_and_chats.user import User
 from ..database.user_db import UserDB
 from PIL import Image
