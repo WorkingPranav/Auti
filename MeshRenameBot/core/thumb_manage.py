@@ -29,7 +29,7 @@ from typing import Union
 # from ..database.user_db import UserDB
 
 # Setup a logger
-renamelog = logging.getLogger(__name)
+renamelog = logging.getLogger(__name__)
 
 # Function to adjust and save the image
 async def adjust_image(path: str) -> Union[str, None]:
