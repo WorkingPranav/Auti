@@ -25,9 +25,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from typing import Union
 
-# Import your UserDB class here, if not done already
-# from ..database.user_db import UserDB
-
 # Setup a logger
 renamelog = logging.getLogger(__name__)
 
@@ -52,7 +49,7 @@ async def handle_set_thumb(client, message: Message):
         if path:
             with open(path, "rb") as file_handle:
                 data = file_handle.read()
-                # UserDB().set_thumbnail(data, message.from_user.id)  # Uncomment and provide your UserDB logic
+                UserDB().set_thumbnail(data, message.from_user.id)
             os.remove(path)
             await message.reply_text("Thumbnail set successfully.", quote=True)
         else:
@@ -63,12 +60,12 @@ async def handle_set_thumb(client, message: Message):
 # Function to handle getting the thumbnail
 @Client.on_message(filters.command("getthumb"))
 async def handle_get_thumb(client, message: Message):
-    user_thumb = UserDB().get_thumbnail(message.from_user.id)  # Define user_thumb variable
+    user_thumb = UserDB().get_thumbnail(message.from_user.id)
     if user_thumb:
         await message.reply_photo(user_thumb, quote=True)
-        os.remove(user_thumb)
     else:
         await message.reply("No Thumbnail Found.", quote=True)
+
 # Function to generate a screenshot
 async def gen_ss(filepath, ts, opfilepath=None):
     source = filepath
@@ -76,7 +73,7 @@ async def gen_ss(filepath, ts, opfilepath=None):
     ss_name = f"{os.path.basename(source)}_{int(time.time())}.jpg"
     ss_path = os.path.join(destination, ss_name)
 
-    cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(ts), "-i", str(source), "-vframes", "1", "-q:v", "2", str(ss_path)]
+    cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(ts), "-i", str(source), "-vframes", "1", "-q:v", "2", str(ss_path)
 
     try:
         subpr = await asyncio.create_subprocess_exec(
@@ -108,44 +105,8 @@ async def resize_img(path, width=None, height=None):
     img.save(path, "JPEG")
     return path
 
-# Function to get a thumbnail or generate one from a video
-async def get_thumbnail(file_path, user_id=None, force_docs=False):
-    print(file_path, "-", user_id, "-", force_docs)
-    metadata = extractMetadata(createParser(file_path))
-    try:
-        duration = metadata.get("duration")
-    except:
-        duration = 3
-
-    if user_id is not None:
-        user_thumb = UserDB().get_thumbnail(user_id)  # Uncomment and provide your UserDB logic
-        if force_docs:
-            if user_thumb:
-                return user_thumb
-            else:
-                return None
-        else:
-            if user_thumb:
-                return user_thumb
-            else:
-                path = await gen_ss(file_path, random.randint(2, int(duration.seconds)))
-                if path:
-                    path = await resize_img(path, 320)
-                    return path
-
-    else:
-        if force_docs:
-            return None
-
-        path = await gen_ss(file_path, random.randint(2, int(duration.seconds)))
-        if path:
-            path = await resize_img(path, 320)
-            return path
-        else:
-            return None
-
 # Function to handle clearing the thumbnail
 @Client.on_message(filters.command("clrthumb"))
 async def handle_clr_thumb(client, message: Message):
-    UserDB().set_thumbnail(None, message.from_user.id)  # Uncomment and provide your UserDB logic
+    UserDB().set_thumbnail(None, message.from_user.id)
     await message.reply_text("Thumbnail Cleared.", quote=True)
