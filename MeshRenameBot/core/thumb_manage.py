@@ -13,18 +13,6 @@ from ..database.user_db import UserDB
 from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
 
-import os
-import asyncio
-import logging
-import time
-import random
-from PIL import Image
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from typing import Union
-
 # Setup a logger
 renamelog = logging.getLogger(__name__)
 
