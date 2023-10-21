@@ -48,7 +48,18 @@ def add_handlers(client: Client) -> None:
 
 
 async def start_handler(client: Client, msg: Message) -> None:
-    await msg.reply(Trans.START_MSG, reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⋆Oᴡɴᴇʀ⋆', url=f"https://t.me/BIackHatDev"),InlineKeyboardButton('⋆Hᴇʟᴘ⋆', callback_data="help_str")]]))
+    await msg.reply(Trans.START_MSG, reply_markup=InlineKeyboardMarkup([
+    [
+        InlineKeyboardButton('⋆Oᴡɴᴇʀ⋆', url="https://t.me/BIackHatDev"),
+        InlineKeyboardButton('⋆Hᴇʟᴘ⋆', callback_data="help_str")
+    ]
+]))
+
+@app.on_callback_query()
+async def help_callback(client, callback_query):
+    if callback_query.data == "help_str":
+        # Edit the message with the help text
+        await callback_query.message.edit_text("Here's the help information.", reply_markup=None)
         
 
 
