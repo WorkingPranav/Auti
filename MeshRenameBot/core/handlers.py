@@ -55,7 +55,7 @@ async def start_handler(client: Client, msg: Message) -> None:
     ]
 ]))
 
-@app.on_callback_query()
+@Client.on_callback_query()
 async def help_callback(client, callback_query):
     if callback_query.data == "help_str":
         # Edit the message with the help text
