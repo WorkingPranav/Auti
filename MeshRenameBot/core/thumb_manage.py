@@ -14,6 +14,7 @@ from ..database.user_db import UserDB
 from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
 
+
 # Setup a logger
 renamelog = logging.getLogger(__name__)
 
@@ -99,3 +100,41 @@ async def resize_img(path, width=None, height=None):
 async def handle_clr_thumb(client, message: Message):
     UserDB().set_thumbnail(None, message.from_user.id)
     await message.reply_text("Thumbnail Cleared.", quote=True)
+
+# Function to get a thumbnail or generate one from a video
+async def get_thumbnail(file_path, user_id=None, force_docs=False):
+    print(file_path, "-", user_id, "-", force_docs)
+    metadata = extractMetadata(createParser(file_path))
+    try:
+        duration = metadata.get("duration")
+    except:
+        duration = 3
+
+    if user_id is not None:
+        user_thumb = UserDB().get_thumbnail(user_id)
+        if force_docs:
+            if user_thumb:
+                return user_thumb
+            else:
+                return None
+        else:
+            if user_thumb:
+                return user_thumb
+            else:
+                path = await gen_ss(file_path, random.randint(2, int(duration.seconds))
+                if path:
+                    path = await resize_img(path, 320)
+                    return path
+
+    else:
+        if force_docs:
+            return None
+
+        path = await gen_ss(file_path, random.randint(2, int(duration.seconds))
+        if path:
+            path = await resize_img(path, 320)
+            return path
+        else:
+            return None
+
+# Rest of your code
