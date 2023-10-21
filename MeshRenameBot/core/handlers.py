@@ -48,7 +48,7 @@ def add_handlers(client: Client) -> None:
 
 
 async def start_handler(client: Client, msg: Message) -> None:
-    await msg.reply(Trans.START_MSG, reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⋆ Support ⋆', url=f"https://t.me/isabella_support"),InlineKeyboardButton('⋆ 𝙷𝚎𝚕𝚙 ⋆', callback_data="help_str")]]))
+    await msg.reply(Trans.START_MSG, reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('⋆Oᴡɴᴇʀ⋆', url=f"https://t.me/BIackHatDev"),InlineKeyboardButton('⋆Hᴇʟᴘ⋆', callback_data="help_str")]]))
         
 
 
