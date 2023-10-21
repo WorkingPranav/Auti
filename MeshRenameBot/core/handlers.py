@@ -47,34 +47,42 @@ def add_handlers(client: Client) -> None:
     signal.signal(signal.SIGTERM, term_handler)
 
 
-async def start_handler(client: Client, msg: Message) -> None:
-    start_message = Trans.START_MSG
-    keyboard = InlineKeyboardMarkup([
+# Start command handler
+@Client.on_message(filters.command("start"))
+async def start_handler(client, message: Message):
+    start_text = Trans.START_MSG
+    keyboard = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton('⋆Oᴡɴᴇʀ⋆', url="https://t.me/BIackHatDev"),
-            InlineKeyboardButton('⋆Hᴇʟᴘ⋆', callback_data="help_str")
+            [InlineKeyboardButton('⋆Oᴡɴᴇʀ⋆', url="https://t.me/BIackHatDev")],
+            [InlineKeyboardButton('⋆Hᴇʟᴘ⋆', callback_data="help_str")]
         ]
-    ])
-    await msg.reply(start_message, reply_markup=keyboard)
+    )
+    await message.reply(start_text, reply_markup=keyboard)
 
-@Client.on_callback_query()
+# Callback query handler for the help button
+@Client.on_callback_query(filters.regex("^help_str$"))
 async def help_callback(client, callback_query):
-    if callback_query.data == "help_str":
-        help_text = """
-        `/start` - Check if the bot is running.
-        `/rename` - Reply to media to rename. Use `/rename filename.extension`. If only `/rename` is used, filters will be applied.
-        `/filters` - Add/Remove Filters. Use this command to see available filters.
-        `/setthumb` - Reply to an image to set the thumbnail permanently.
-        `/getthumb` - Get the current thumbnail.
-        `/clrthumb` - Remove the current thumbnail.
-        `/mode` - Change between 3 modes:
-            - Same format as it was sent. (If a document is sent, a document is uploaded. If a video is sent, a video is uploaded.)
-            - Force to Document. (Everything is uploaded as a file.)
-            - Upload general media. (In streamable video/audio, etc.)
-        `/queue` - Get the status of your rename and the bot's workload.
-        """
-        await callback_query.message.edit_text(help_text, reply_markup=None)
-        
+    help_text = """
+    Here are the available commands:
+    
+    `/rename` - Reply to media to rename. Use `/rename filename.extension`. If only `/rename` is used, filters will be applied.
+    
+    `/filters` - Add/Remove Filters. Use this command to see available filters.
+    
+    `/setthumb` - Reply to an image to set the thumbnail permanently.
+    
+    `/getthumb` - Get the current thumbnail.
+    
+    `/clrthumb` - Remove the current thumbnail.
+    
+    `/mode` - Change between 3 modes:
+        - Same format as it was sent. (If a document is sent, a document is uploaded. If a video is sent, a video is uploaded.)
+        - Force to Document. (Everything is uploaded as a file.)
+        - Upload general media. (In streamable video/audio, etc.)
+    
+    `/queue` - Get the status of your rename task and the bot's workload.
+    """
+    await callback_query.message.edit_text(help_text, reply_markup=None)
 
 
 async def rename_handler(client: Client, msg: Message) -> None:
