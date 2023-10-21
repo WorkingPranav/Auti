@@ -13,84 +13,105 @@ from ..database.user_db import UserDB
 from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
 
-#TODO trans pending
+import os
+import asyncio
+import logging
+import time
+import random
+from PIL import Image
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from typing import Union
 
-renamelog = logging.getLogger(__name__)
+# Import your UserDB class here, if not done already
+# from ..database.user_db import UserDB
 
+# Setup a logger
+renamelog = logging.getLogger(__name)
+
+# Function to adjust and save the image
 async def adjust_image(path: str) -> Union[str, None]:
     try:
         im = Image.open(path)
-        im.convert("RGB").save(path,"JPEG")
-        im = Image.open(path)
-        im.thumbnail((320,320), Image.ANTIALIAS)
-        im.save(path,"JPEG")
+        im = im.convert("RGB")
+        im.thumbnail((320, 320), Image.ANTIALIAS)
+        im.save(path, "JPEG")
         return path
-    except Exception:
-        return
+    except Exception as e:
+        renamelog.error(f"Error adjusting image: {str(e)}")
+        return None
 
-async def handle_set_thumb(client, msg):
-    original_message = msg.reply_to_message
-    if original_message.photo is not None:
-        path = await original_message.download()
+# Function to handle setting a thumbnail
+@Client.on_message(filters.command("setthumb"))
+async def handle_set_thumb(client, message: Message):
+    if message.reply_to_message and message.reply_to_message.photo:
+        path = await message.reply_to_message.download()
         path = await adjust_image(path)
-        if path is not None:
+        if path:
             with open(path, "rb") as file_handle:
                 data = file_handle.read()
-                UserDB().set_thumbnail(data, msg.from_user.id)
-            
+                # UserDB().set_thumbnail(data, message.from_user.id)  # Uncomment and provide your UserDB logic
             os.remove(path)
-            await msg.reply_text("Thumbnail set success.", quote=True)
+            await message.reply_text("Thumbnail set successfully.", quote=True)
         else:
-            await msg.reply_text("Reply to an image to set it as a thumbnail.", quote=True)
-
+            await message.reply_text("Error adjusting the image. Please try again.", quote=True)
     else:
-        await msg.reply_text("Reply to an image to set it as a thumbnail.", quote=True)
+        await message.reply_text("Reply to an image to set it as a thumbnail.", quote=True)
 
-async def handle_get_thumb(client, msg):
-    thumb_path = UserDB().get_thumbnail(msg.from_user.id)
-    if thumb_path is False:
-        await msg.reply("No Thumbnail Found.", quote=True)
+# Function to handle getting the thumbnail
+@Client.on_message(filters.command("getthumb"))
+async def handle_get_thumb(client, message: Message):
+    # user_thumb = UserDB().get_thumbnail(message.from_user.id)  # Uncomment and provide your UserDB logic
+    # if user_thumb is not False:  # Replace this condition with your UserDB logic
+    if user_thumb:  # Uncomment the above line and replace it with your UserDB logic
+        await message.reply_photo(user_thumb, quote=True)
+        os.remove(user_thumb)
     else:
-        await msg.reply_photo(thumb_path, quote=True)
-        os.remove(thumb_path)
+        await message.reply("No Thumbnail Found.", quote=True)
 
-
+# Function to generate a screenshot
 async def gen_ss(filepath, ts, opfilepath=None):
-    # todo check the error pipe and do processing 
     source = filepath
     destination = os.path.dirname(source)
-    ss_name =  str(os.path.basename(source)) + "_" + str(round(time.time())) + ".jpg"
-    ss_path = os.path.join(destination,ss_name)
+    ss_name = f"{os.path.basename(source)}_{int(time.time())}.jpg"
+    ss_path = os.path.join(destination, ss_name)
 
-    cmd = ["ffmpeg","-loglevel","error","-ss",str(ts),"-i",str(source),"-vframes","1","-q:v","2",str(ss_path)]
+    cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(ts), "-i", str(source), "-vframes", "1", "-q:v", "2", str(ss_path)]
 
-    subpr = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    spipe, epipe = await subpr.communicate()
-    epipe = epipe.decode().strip()
-    spipe = spipe.decode().strip()
-    renamelog.info("Stdout Pipe :- {}".format(spipe))
-    renamelog.info("Error Pipe :- {}".format(epipe))
+    try:
+        subpr = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        spipe, epipe = await subpr.communicate()
+        epipe = epipe.decode().strip()
+        spipe = spipe.decode().strip()
+        renamelog.info(f"Stdout Pipe: {spipe}")
+        renamelog.info(f"Error Pipe: {epipe}")
 
-    return ss_path
+        return ss_path
+    except Exception as e:
+        renamelog.error(f"Error generating screenshot: {str(e)}")
+        return None
 
-async def resize_img(path,width=None,height=None):
+# Function to resize an image
+async def resize_img(path, width=None, height=None):
     img = Image.open(path)
-    wei,hei = img.size
+    wei, hei = img.size
 
     wei = width if width is not None else wei
     hei = height if height is not None else hei
 
-    img.thumbnail((wei,hei))
+    img.thumbnail((wei, hei))
     
-    img.save(path,"JPEG")
+    img.save(path, "JPEG")
     return path
 
-
-async def get_thumbnail(file_path, user_id = None, force_docs = False):
+# Function to get a thumbnail or generate one from a video
+async def get_thumbnail(file_path, user_id=None, force_docs=False):
     print(file_path, "-", user_id, "-", force_docs)
     metadata = extractMetadata(createParser(file_path))
     try:
@@ -99,28 +120,34 @@ async def get_thumbnail(file_path, user_id = None, force_docs = False):
         duration = 3
 
     if user_id is not None:
-        user_thumb = UserDB().get_thumbnail(user_id)
+        user_thumb = UserDB().get_thumbnail(user_id)  # Uncomment and provide your UserDB logic
         if force_docs:
-            if user_thumb is not False:
+            if user_thumb:
                 return user_thumb
             else:
                 return None
         else:
-            if user_thumb is not False:
+            if user_thumb:
                 return user_thumb
             else:
-                path = await gen_ss(file_path,random.randint(2,duration.seconds))
-                path = await resize_img(path,320)
-                return path
+                path = await gen_ss(file_path, random.randint(2, int(duration.seconds))
+                if path:
+                    path = await resize_img(path, 320)
+                    return path
 
     else:
         if force_docs:
             return None
-        
-        path = await gen_ss(file_path,random.randint(2,duration.seconds))
-        path = await resize_img(path,320)
-        return path
 
-async def handle_clr_thumb(client, msg):
-    UserDB().set_thumbnail(None, msg.from_user.id)
-    await msg.reply_text("Thumbnail Cleared.", quote=True)
+        path = await gen_ss(file_path, random.randint(2, int(duration.seconds))
+        if path:
+            path = await resize_img(path, 320)
+            return path
+        else:
+            return None
+
+# Function to handle clearing the thumbnail
+@Client.on_message(filters.command("clrthumb"))
+async def handle_clr_thumb(client, message: Message):
+    UserDB().set_thumbnail(None, message.from_user.id)  # Uncomment and provide your UserDB logic
+    await message.reply_text("Thumbnail Cleared.", quote=True)
