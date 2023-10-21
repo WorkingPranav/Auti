@@ -73,7 +73,7 @@ async def gen_ss(filepath, ts, opfilepath=None):
     ss_name = f"{os.path.basename(source)}_{int(time.time())}.jpg"
     ss_path = os.path.join(destination, ss_name)
 
-    cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(ts), "-i", str(source), "-vframes", "1", "-q:v", "2", str(ss_path)
+    cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(ts), "-i", str(source), "-vframes", "1", "-q:v", "2", str(ss_path)]
 
     try:
         subpr = await asyncio.create_subprocess_exec(
