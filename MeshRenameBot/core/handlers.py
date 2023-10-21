@@ -60,7 +60,7 @@ async def start_handler(client, message: Message):
     await message.reply(start_text, reply_markup=keyboard)
 
 # Callback query handler for the help button
-@Client.on_callback_query(filters.regex("^help_str$"))
+@Client.on_callback_query(filters.regex(r"^help_str$"))
 async def help_callback(client, callback_query):
     help_text = """
     Here are the available commands:
