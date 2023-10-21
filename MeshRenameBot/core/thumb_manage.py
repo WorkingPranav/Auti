@@ -63,14 +63,12 @@ async def handle_set_thumb(client, message: Message):
 # Function to handle getting the thumbnail
 @Client.on_message(filters.command("getthumb"))
 async def handle_get_thumb(client, message: Message):
-    # user_thumb = UserDB().get_thumbnail(message.from_user.id)  # Uncomment and provide your UserDB logic
-    # if user_thumb is not False:  # Replace this condition with your UserDB logic
-    if user_thumb:  # Uncomment the above line and replace it with your UserDB logic
+    user_thumb = UserDB().get_thumbnail(message.from_user.id)  # Define user_thumb variable
+    if user_thumb:
         await message.reply_photo(user_thumb, quote=True)
         os.remove(user_thumb)
     else:
         await message.reply("No Thumbnail Found.", quote=True)
-
 # Function to generate a screenshot
 async def gen_ss(filepath, ts, opfilepath=None):
     source = filepath
